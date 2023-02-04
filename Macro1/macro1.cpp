@@ -1,3 +1,9 @@
+/*
+MacroEntrega 1: Leitura de Dados, Estruturas e verificação de restrição
+Enzo Velo : 202120910
+Lucas Gomes Colombo : 202120795
+Rafael Brunini : 202120488
+*/
 #include <iostream>
 #include <fstream>
 #include <cstring>
