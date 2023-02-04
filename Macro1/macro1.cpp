@@ -241,20 +241,7 @@ int main(){
 
 
     leituraGrafo(posicaoAtualArquivo,instancia.tamanho_instancia,MA,totalPontos);
-
-    cout << instancia.tamanho_instancia << ' ' << instancia.roterizacao << ' ' <<  instancia.janela_de_tempo<< ' ' << instancia.capacidade_veiculo << endl;
-
-    for(int i = 0; i < instancia.tamanho_instancia;i++){
-         cout << totalPontos[i].id << endl;
-    }
     
-
-    for (int i = 0; i < instancia.tamanho_instancia; i++){
-        for(int j = 0; j < instancia.tamanho_instancia;j++)
-            cout << MA[i][j] << " ";
-        cout << endl;
-    }
-
     if (verificaRestricao(totalPontos, instancia, MA) == 1)
         cout << "Verificado com sucesso!" << endl;
     else
