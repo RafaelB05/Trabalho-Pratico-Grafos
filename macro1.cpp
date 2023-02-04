@@ -1,6 +1,8 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include <time.h>
+#include <unistd.h>
 #include <cstdlib>
 
 using namespace std;
@@ -22,6 +24,12 @@ struct Pontos{
     int duracaoServico;
     int pColeta;
     int pEntrega;
+};
+
+struct Truck{
+    unsigned int id;
+    int tempoGasto = 0;
+    int capacity = 0;
 };
 
 void LerInstancia(string namefile, Instancia &instancia){
@@ -125,6 +133,93 @@ void leituraGrafo(string nameFile,int tamanhoGrafo,int **MA,Pontos *totalPontos)
 
     }
 }
+
+void randomNumber(int *vetor, int nodesNumber, Instancia inst){
+    
+    srand(time(0)); // Seta a raiz da geração de numeros como o tempo atual
+
+    for (int i = 0; i < nodesNumber; i++) {
+        int random_number = (rand() % ((inst.tamanho_instancia) / 2) - 1) + 1; // Gera X numeros aleatorios baseado no tamanho da instancia
+        vetor[i] = random_number;
+    }
+
+}
+
+bool verificaRestricao(Pontos *vetor, Instancia inst, int **MA){
+
+    bool worth = true;
+    Pontos Deposito = vetor[0];
+
+    Truck caminhao;
+
+    //Deposito -> 5 -> 12 -> 15 -> 22 -> Deposito #6
+    //Demanda: 0 + 30 + 24 + (-30) + (-24) + 0
+    //Tempo: (0)0 + [0, 5]15 + (5)3 + [5, 12]16 + (12)4 + [12, 15]20 + (15)5 + [15, 22]10 + (22)5 + [22, 0]19
+
+    /*-------SETANDO SEQUENCIA DE NODES E SEQUENCIA DE NODES POSTERIOR-------*/
+
+    int nodesNumber;
+
+    cout << "Insira a quantidade de nodes que deseja testar: ";
+    cin >> nodesNumber;
+
+    int sequenciaNodes[nodesNumber];
+    int sequenciaNodesPosterior[nodesNumber];
+    
+    randomNumber(sequenciaNodes, nodesNumber, inst);
+    
+    sequenciaNodes[0] = 0; // Seta inicio do trajeto como Deposito (0)
+    sequenciaNodes[nodesNumber - 1] = 0; // Seta fim do trajeto como Deposito (0)
+    
+    cout << "Os Nodes selecionados foram: ";
+    for (int i = 0; i < nodesNumber; i++) 
+        cout << sequenciaNodes[i] << " ";
+
+    cout << endl;
+
+    for (int i = 0; i < nodesNumber; i++) 
+        sequenciaNodesPosterior[i] = vetor[sequenciaNodes[i]].pEntrega;
+
+    /*-------SETADO SEQUENCIA DE NODES E SEQUENCIA DE NODES POSTERIOR-------*/
+
+    for (int i = 0; i < nodesNumber; i++){ //ENCHENDO O CAMINHÃO
+        caminhao.capacity += vetor[sequenciaNodes[i]].demanda;
+
+        if (caminhao.capacity > inst.capacidade_veiculo)
+        {
+            worth = false;
+            cout << "!!!Capacidade Maxima atingida!!!" << endl;
+            break;
+        }
+    }
+
+    cout << "Capacidade usada total de: ";
+    cout << caminhao.capacity << endl;
+
+    //ESVAZIANDO CAMINHÃO
+    for (int i = 0; i < nodesNumber; i++){
+        caminhao.capacity -= vetor[sequenciaNodesPosterior[i]].demanda;
+    }
+
+    for (int i = 0; i < nodesNumber; i++){
+        caminhao.tempoGasto += MA[sequenciaNodes[i]][sequenciaNodesPosterior[i]];
+        caminhao.tempoGasto += vetor[sequenciaNodes[i]].duracaoServico;
+        caminhao.tempoGasto += vetor[sequenciaNodesPosterior[i]].duracaoServico;
+        if (caminhao.tempoGasto > inst.roterizacao)
+        {
+            cout << "!!!Tempo Maximo Exedido!!!" << endl;
+            break;
+        }
+    }
+
+    cout << "Tempo gasto total de: ";
+    cout << caminhao.tempoGasto << endl;
+
+    return worth;
+
+}
+
+
 int main(){
 
     string posicaoAtualArquivo;
@@ -153,5 +248,12 @@ int main(){
             cout << MA[i][j] << " ";
         cout << endl;
     }
+
+    if (verificaRestricao(totalPontos, instancia, MA) == 1)
+        cout << "Verificado com sucesso!" << endl;
+    else
+        cout << "Verificado com falhas..." << endl;
+
+
     return 0;
 }
