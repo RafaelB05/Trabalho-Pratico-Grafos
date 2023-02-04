@@ -2,7 +2,7 @@ NAME: poa-n100-6
 LOCATION: Porto-Alegre
 COMMENT:  Sartori and Buriol (2019)
 TYPE: PDPTW
-SIZE: 100
+SIZE: 101
 DISTRIBUTION: cluster (3 / 1.1)
 DEPOT: central
 ROUTE-TIME: 480
