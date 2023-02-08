@@ -172,6 +172,9 @@ bool verificaRestricao(Pontos *totalPontos, Instancia inst,Truck caminhao){
         
         if(caminhao.tempoGasto > entrega.tempoLimite)
             return false;
+        else if(caminhao.tempoGasto < entrega.menorTempo) // Trata caso o caminhao alcance o ponto em um momento que ele ainda esta fechado
+            caminhao.tempoGasto += (entrega.menorTempo - caminhao.tempoGasto);
+
 
             
     }
