@@ -34,8 +34,12 @@ vector<int> geraRotas(Instancia inst, Pontos *totalPontos, int index, Truck cami
 
 int main(){
 
+    cout << "BEM VINDO AO GERADOR DE ROTAS" << endl;
+
     string namefile;
-	cin >> namefile;
+	
+    cout << "Insira a instância a qual deseja testar: ";
+    cin >> namefile;
 	
 	
     Instancia instancia;
