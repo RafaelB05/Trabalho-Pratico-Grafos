@@ -8,8 +8,12 @@
 #include <unistd.h>
 #include <cstdlib>
 #include <vector>
+#include <algorithm>
+#include <sstream>
 
 using namespace std;
+
+const int INF = 1000000;
 
 struct Instancia{
     int tamanho_instancia;
@@ -19,22 +23,23 @@ struct Instancia{
 };
 
 struct Pontos{
-    unsigned int id;
+    int id;
     float latitude;
     float longitude;
     int demanda;
-    int menorTempo;
+    int tempoAbertura;
     int tempoLimite;
     int duracaoServico;
     int pColeta;
     int pEntrega;
+    bool visitado = false;
 };
 
 struct Truck{
     unsigned int id;
     int tempoGasto = 0;
     int ocupacao = 0;
-     vector <Pontos> sequencia;
+     vector <int> rota;
 };
 
 void LerInstancia(string namefile, Instancia &instancia){
@@ -99,7 +104,7 @@ void leituraGrafo(string nameFile,int tamanhoGrafo,int **MA,Pontos *totalPontos)
                     break;
                 
                 case 5:
-                    totalPontos[i].menorTempo = stoi(posicaoAtual);
+                    totalPontos[i].tempoAbertura = stoi(posicaoAtual);
                     break;
                 
                 case 6:
@@ -139,20 +144,20 @@ void leituraGrafo(string nameFile,int tamanhoGrafo,int **MA,Pontos *totalPontos)
     }
 }
 
-
-bool verificaRestricao(Pontos *totalPontos, Instancia inst,Truck caminhao){
+bool verificaRestricao(Pontos *totalPontos, Instancia inst, Truck caminhao){
     
     int visitaEntrega, visitaColeta;
     Pontos coleta;
     Pontos entrega;
+    Pontos atual;
     bool restrito = false;
 
     //precedencia de coleta
-    for(int i = 0; i < int(caminhao.sequencia.size()); i++){
+    for(int i = 0; i < int(caminhao.rota.size()); i++){
         restrito = false;
-        if(caminhao.sequencia[i].pColeta > 0){
+        if(totalPontos[caminhao.rota[i]].pColeta > 0){
             for(int j = 0; j < i ;j++){
-                if(caminhao.sequencia[j].id == caminhao.sequencia[i].pColeta)
+                if(totalPontos[caminhao.rota[j]].id == totalPontos[caminhao.rota[i]].pColeta)
                     restrito = true;
             }
             if(restrito == false)
@@ -162,58 +167,151 @@ bool verificaRestricao(Pontos *totalPontos, Instancia inst,Truck caminhao){
     }
 
     //Janela de Tempo
-    for(int i = 0; i < int(caminhao.sequencia.size()); i++){
-        visitaEntrega = visitaColeta = 0;
-        if(caminhao.sequencia[i].pColeta == 0 and caminhao.sequencia[i].id != 0){
-            entrega = totalPontos[caminhao.sequencia[i].pEntrega];
+    for(int i = 1; i < int(caminhao.rota.size()); i++){
+        atual = totalPontos[caminhao.rota[i]];
+        if(caminhao.tempoGasto < atual.tempoAbertura){
+            caminhao.tempoGasto += atual.tempoAbertura - caminhao.tempoGasto;
+            // cout << "Tempo gasto: " << caminhao.tempoGasto << endl;
         }
-        else if(caminhao.sequencia[i].pEntrega == 0 and caminhao.sequencia[i].id != 0)
-            entrega = caminhao.sequencia[i];
-        
-        if(caminhao.tempoGasto > entrega.tempoLimite)
+        else if(caminhao.tempoGasto > atual.tempoLimite){
             return false;
-        else if(caminhao.tempoGasto < entrega.menorTempo) // Trata caso o caminhao alcance o ponto em um momento que ele ainda esta fechado
-            caminhao.tempoGasto += (entrega.menorTempo - caminhao.tempoGasto);
-
-
-            
+        }
     }
+
     // Obrigatoriedade e Exclusividade de visita
-    for(int i = 0; i < int(caminhao.sequencia.size()); i++){
+    for(int i = 0; i < int(caminhao.rota.size()); i++){
         visitaEntrega = 0;
         visitaColeta = 0;
-        if(caminhao.sequencia[i].pColeta == 0 and caminhao.sequencia[i].id != 0){
-            coleta = caminhao.sequencia[i];
-            entrega = totalPontos[caminhao.sequencia[i].pEntrega-1];
+        if(totalPontos[caminhao.rota[i]].pColeta == 0 and totalPontos[caminhao.rota[i]].id != 0){
+            coleta = totalPontos[caminhao.rota[i]];
+            entrega = totalPontos[totalPontos[caminhao.rota[i]].pEntrega-1];
         }
-        else if(caminhao.sequencia[i].pEntrega == 0 and caminhao.sequencia[i].id != 0){
-            entrega = caminhao.sequencia[i];
-            coleta = totalPontos[caminhao.sequencia[i].pColeta-1];
+        else if(totalPontos[caminhao.rota[i]].pEntrega == 0 and totalPontos[caminhao.rota[i]].id != 0){
+            entrega = totalPontos[caminhao.rota[i]];
+            coleta = totalPontos[totalPontos[caminhao.rota[i]].pColeta-1];
         }
 
-        for(int j = 0; j < caminhao.sequencia.size();j++){
-            if(caminhao.sequencia[j].id == coleta.id)
+        for(int j = 0; j < int(caminhao.rota.size()); j++){
+            if(totalPontos[caminhao.rota[j]].id == coleta.id)
                 visitaColeta++;
 
-            if(caminhao.sequencia[j].id == entrega.id)
+            if(totalPontos[caminhao.rota[j]].id == entrega.id)
                 visitaEntrega++;
         }
         if(visitaColeta > 1 or visitaEntrega > 1)
             return false;
+    }
 
+    // Verifica inicio e fim e se não estoura o tempo de roterização
+    if(caminhao.rota[0] != 0 or caminhao.rota[caminhao.rota.size()-1] != 0 or caminhao.tempoGasto > inst.roterizacao){
+        return false;
+    }
+        
+    //Capacidade do veiculo
+    if(caminhao.ocupacao > inst.capacidade_veiculo){
+        return false;
+    }
+    return true; // caso passe por todas as restrições retorna verdadeiro
+}
+
+vector<pair<int, int>> pega_pares(vector<int> lista){
+    vector<pair<int, int>> pares;
+    for (int i = 0; i < int(lista.size()) - 1; i++) {
+        pares.push_back(make_pair(lista[i], lista[i + 1]));
+    }
+    pares.push_back(make_pair(lista[lista.size() - 1], lista[0]));
+    
+    return pares;
+}
+
+int custo_total(const vector<int> &ciclo, int** MA) {
+    int custo = 0;
+    vector<pair<int, int>>pares = pega_pares(ciclo);
+    for (int i = 0; i < int(pares.size()) - 1; i++)
+    {
+        int a = pares[i].first;
+        int b = pares[i].second;
+        custo = MA[a][b] + custo;
+        //cout << "custo = +" << MA[a][b] << " - " << custo << endl;
+    }
+    //cout << endl;
+
+    return custo;
+}
+
+vector<int> mais_proximo(Truck caminhao, vector<int>ciclo_inicial, int** MA, Instancia inst, Pontos *totalPontos, int &finish) {
+    while (true) {
+        int distancia_vertice = INF;
+        int custo_coleta = INF;
+        int vertice = -1;
+
+        for (int linha = 0; linha < (inst.tamanho_instancia - 1) / 2; linha++) {
+            if (find(ciclo_inicial.begin(), ciclo_inicial.end(), linha) == ciclo_inicial.end()) {
+                for (int coluna = 0; coluna < inst.tamanho_instancia; coluna++) {
+                    if (find(ciclo_inicial.begin(), ciclo_inicial.end(), coluna) != ciclo_inicial.end()) {
+                        if (MA[linha][coluna] < distancia_vertice) {
+                            if (!totalPontos[linha].visitado){   
+                                distancia_vertice = MA[linha][coluna];
+                                vertice = linha;
+                            }
+                            else
+                                linha++;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (vertice != -1){
+            totalPontos[vertice].visitado = true;
+            totalPontos[totalPontos[vertice].pEntrega].visitado = true;
+
+            vector<pair<int, int>> pares = pega_pares(ciclo_inicial);
+            
+            caminhao.ocupacao += totalPontos[vertice].demanda;
+            caminhao.tempoGasto += totalPontos[vertice].duracaoServico;
+            caminhao.ocupacao += totalPontos[totalPontos[vertice].pEntrega].demanda;
+            caminhao.tempoGasto += totalPontos[totalPontos[vertice].pEntrega].duracaoServico;
+
+            for (pair<int, int> aresta : pares) {
+                int novo_custo_coleta = MA[vertice][aresta.first] + MA[vertice][aresta.second] - MA[aresta.first][aresta.second];
+                if (novo_custo_coleta < custo_coleta) {
+                    
+                    caminhao.rota = ciclo_inicial;
+
+                    custo_coleta = novo_custo_coleta;
+                    
+                    auto it = find(caminhao.rota.begin(), caminhao.rota.end(), aresta.first);
+                    caminhao.rota.insert((caminhao.rota.begin() + int(it - caminhao.rota.begin() + 1)), vertice);
+
+                    it = find(caminhao.rota.begin(), caminhao.rota.end(), vertice);
+                    caminhao.rota.insert((caminhao.rota.begin() + int(it - caminhao.rota.begin() + 1)), totalPontos[vertice].pEntrega);
+
+                    // for (int i = 0; i < caminhao.rota.size(); i++){
+                    //     cout << caminhao.rota[i] << " ";
+                    // }
+                    // cout << endl;
+
+                    if (verificaRestricao(totalPontos, inst, caminhao)){
+                        caminhao.tempoGasto += custo_coleta;
+                        continue;
+                    }
+                    else{
+                        caminhao.tempoGasto += custo_coleta;
+                        return ciclo_inicial;
+                    }
+                }
+            }
+        }
+        else{
+            finish = 1;
+            return ciclo_inicial;
+        }
+
+        ciclo_inicial = caminhao.rota;
 
     }
 
-    //Verifica inicio e fim e se não estoura o tempo de roterização
-    if(caminhao.sequencia[0].id != 0 or caminhao.sequencia[caminhao.sequencia.size()-1].id != 0 or caminhao.tempoGasto > inst.roterizacao)
-        return false;
-        
-    //Capacidade do veiculo
-    if(caminhao.ocupacao > inst.capacidade_veiculo)
-        return false;
-
-
-    return true; // caso passe por todas as restrições retorna verdadeiro
 }
 
 #endif
