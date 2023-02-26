@@ -166,12 +166,11 @@ bool verificaRestricao(Pontos *totalPontos, Instancia inst, Truck caminhao){
         }
     }
 
-    //Janela de Tempo
+    //Verifica se chegou antes do tempo de abertura ou se estourou o tempo de fechamento
     for(int i = 1; i < int(caminhao.rota.size()); i++){
         atual = totalPontos[caminhao.rota[i]];
         if(caminhao.tempoGasto < atual.tempoAbertura){
             caminhao.tempoGasto += atual.tempoAbertura - caminhao.tempoGasto;
-            // cout << "Tempo gasto: " << caminhao.tempoGasto << endl;
         }
         else if(caminhao.tempoGasto > atual.tempoLimite){
             return false;
@@ -239,6 +238,7 @@ int custo_total(const vector<int> &ciclo, int** MA) {
     return custo;
 }
 
+//Heuristica pra escolha do ponto de inserção
 vector<int> mais_proximo(Truck caminhao, vector<int>ciclo_inicial, int** MA, Instancia inst, Pontos *totalPontos, int &finish) {
     while (true) {
         int distancia_vertice = INF;
@@ -286,12 +286,6 @@ vector<int> mais_proximo(Truck caminhao, vector<int>ciclo_inicial, int** MA, Ins
 
                     it = find(caminhao.rota.begin(), caminhao.rota.end(), vertice);
                     caminhao.rota.insert((caminhao.rota.begin() + int(it - caminhao.rota.begin() + 1)), totalPontos[vertice].pEntrega);
-
-                    // for (int i = 0; i < caminhao.rota.size(); i++){
-                    //     cout << caminhao.rota[i] << " ";
-                    // }
-                    // cout << endl;
-
                     if (verificaRestricao(totalPontos, inst, caminhao)){
                         caminhao.tempoGasto += custo_coleta;
                         continue;

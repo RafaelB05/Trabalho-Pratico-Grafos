@@ -25,7 +25,7 @@ vector<int> geraRotas(Instancia inst, Pontos *totalPontos, int index, Truck cami
     rota.push_back(totalPontos[index].pEntrega);
     rota.push_back(0);
     ref++;
-    for (int i = 0; i < rota.size(); i++){
+    for (int i = 0; i < int(rota.size()); i++){
         caminhao.tempoGasto += totalPontos[rota[i]].duracaoServico;
         caminhao.ocupacao += totalPontos[rota[i]].demanda;
     }
@@ -76,7 +76,7 @@ int main(){
 
     cout << "Total de caminhoes: " << caminhoes.size() << endl;
     int custo = 0;
-    for (int i = 0; i < caminhoes.size(); i++){
+    for (int i = 0; i < int(caminhoes.size()); i++){
         custo += custo_total(caminhoes[i].rota, MA);
     }
     cout << "Custo total: " << custo << endl;
