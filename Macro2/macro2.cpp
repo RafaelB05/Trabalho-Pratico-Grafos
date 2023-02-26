@@ -33,12 +33,11 @@ vector<int> geraRotas(Instancia inst, Pontos *totalPontos, int index, Truck cami
 }
 
 int main(){
-
     cout << "BEM VINDO AO GERADOR DE ROTAS" << endl;
 
     string namefile;
 	
-    cout << "Insira a instância a qual deseja testar: ";
+    cout << "Insira a instancia a qual deseja testar: ";
     cin >> namefile;
 	
 	
@@ -80,6 +79,4 @@ int main(){
         custo += custo_total(caminhoes[i].rota, MA);
     }
     cout << "Custo total: " << custo << endl;
-
-    return 0;
-}
+};

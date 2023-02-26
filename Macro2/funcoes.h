@@ -23,7 +23,7 @@ struct Instancia{
 };
 
 struct Pontos{
-    int id;
+    unsigned int id;
     float latitude;
     float longitude;
     int demanda;
