@@ -53,6 +53,15 @@ int main(){
     leituraGrafo(namefile, instancia.tamanho_instancia, MA, totalPontos);
 
     Pontos *coletas = new Pontos[(instancia.tamanho_instancia - 1 ) / 2];
+    for(int i = 0; i < (instancia.tamanho_instancia - 1 ) / 2; i++){
+        coletas[i] = totalPontos[i];
+        cout << coletas[i].id << " ";
+    }
+    cout << endl;
+
+    for(int i = 0; i < (instancia.tamanho_instancia - 1 ) / 2; i++)
+        cout << coletas[i].id << " ";
+    cout << endl;
 
     vector<int> rota;
     int finish = 0;
@@ -69,14 +78,32 @@ int main(){
             goto label1;
         }
         caminhao.rota = mais_proximo(caminhao, rota, MA, instancia, totalPontos, finish);
+        // caminhao.tempoGasto += custo_total(caminhao.rota, MA);
+        cout << "Melhor rota: " << endl;
+        for (int i = 0; i < caminhao.rota.size(); i++){
+            cout << caminhao.rota[i] << " ";
+        }
+        cout << endl;
         caminhoes.push_back(caminhao);
     }
+
+    // int custo = INF;
+
+    // for (int i = 0; i < caminhoes.size(); i++){
+    //     if (verificaRestricao(totalPontos, instancia, caminhoes[i].rota.insert(caminhoes[i].rota.begin + 1, caminhoes[i + 1].rota))){
+    //         caminhoes[i].rota.insert(caminhoes[i].rota.begin + 1, caminhoes[i + 1].rota);
+    //         caminhoes[i + 1]
+    //     }
+        
+    // }
     
 
     cout << "Total de caminhoes: " << caminhoes.size() << endl;
     int custo = 0;
-    for (int i = 0; i < int(caminhoes.size()); i++){
+    for (int i = 0; i < caminhoes.size(); i++){
         custo += custo_total(caminhoes[i].rota, MA);
     }
     cout << "Custo total: " << custo << endl;
-};
+
+    return 0;
+}
